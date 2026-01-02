@@ -37,7 +37,7 @@ Follow these steps to build the workflows in n8n.
 ### Prerequisites (n8n Setup)
 Run n8n using Docker:
 ```bash
-docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8n/n8n
+docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8nio/n8n
 ```
 Access at `http://localhost:5678`.
 
