@@ -1,0 +1,20 @@
+{
+  "name": "cold-email-automation",
+  "version": "1.0.0",
+  "description": "Helper scripts for Cold Email Automation with n8n",
+  "main": "trigger_workflow.js",
+  "scripts": {
+    "test": "node trigger_workflow.js"
+  },
+  "keywords": [
+    "n8n",
+    "automation",
+    "cold-email"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0"
+  }
+}
