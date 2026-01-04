@@ -24,12 +24,13 @@ Create a new Google Sheet with the following headers in Row 1:
 | D | `role` | Job Title |
 | E | `email` | Email Address |
 | F | `linkedin_url` | LinkedIn Profile URL |
-| G | `status` | `new`, `emailed`, `followed_up`, `replied`, `error` |
-| H | `last_contacted_date` | Date (YYYY-MM-DD) |
-| I | `email_subject` | Generated Subject Line |
-| J | `email_body` | Generated Email Body |
-| K | `linkedin_message` | Generated LinkedIn Note |
-| L | `error_reason` | Error logs |
+| G | `company_type` | `mnc` or `startup` |
+| H | `status` | `new`, `emailed`, `followed_up`, `replied`, `error` |
+| I | `last_contacted_date` | Date (YYYY-MM-DD) |
+| J | `email_subject` | Generated Subject Line |
+| K | `email_body` | Generated Email Body |
+| L | `linkedin_message` | Generated LinkedIn Note |
+| M | `error_reason` | Error logs |
 
 ## C. n8n Workflow Instructions
 Follow these steps to build the workflows in n8n.
@@ -52,17 +53,20 @@ Access at `http://localhost:5678`.
 *   **Node**: `Schedule Trigger`
 *   **Settings**: Trigger Interval: `Days`, Time: `9:00 AM` (or preferred time).
 
-**2. Read New Leads**
-*   **Node**: `Google Sheets`
-*   **Operation**: `Get Many Rows`
-*   **Settings**:
-    *   Sheet: Be sure to select the correct sheet.
-    *   Filters: `status` Equal to `new`.
-    *   Limit: `40`.
+**2. Read New Leads (Split Strategy)**
+We will read 20 MNCs and 20 Startups in parallel.
+*   **Node A**: `Google Sheets` (Get Many Rows)
+    *   Filters: `status`=`new` AND `company_type`=`mnc`
+    *   Limit: `20`
+*   **Node B**: `Google Sheets` (Get Many Rows)
+    *   Filters: `status`=`new` AND `company_type`=`startup`
+    *   Limit: `20`
 
-**3. Loop Over Leads**
-*   **Node**: `Split In Batches` (or standard `Loop`).
-*   **Settings**: Batch Size: `1`.
+**3. Merge & Loop**
+*   **Node**: `Merge`
+    *   Mode: `Append` (Connect both Sheet nodes to this).
+*   **Node**: `Split In Batches`
+    *   Batch Size: `1`.
 
 **4. Generate Content (AI)**
 *   **Node**: `Google Gemini Chat`
