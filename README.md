@@ -42,8 +42,8 @@ docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8nio/n8n
 Access at `http://localhost:5678`.
 
 ### Credentials Needed
-1.  **Google Cloud (OAuth)**: Enable "Gmail API" and "Google Sheets API". Create OAuth Client ID. Add `http://localhost:5678/oauth2/callback` as redirect URI.
-2.  **OpenAI / Anthropic**: API Key for the LLM node.
+12.  **Google Cloud (OAuth)**: Enable "Gmail API" and "Google Sheets API". Create OAuth Client ID. Add `http://localhost:5678/oauth2/callback` as redirect URI.
+3.  **Google Gemini**: API Key (from Google AI Studio) for the LLM node.
 
 ---
 
@@ -65,8 +65,8 @@ Access at `http://localhost:5678`.
 *   **Settings**: Batch Size: `1`.
 
 **4. Generate Content (AI)**
-*   **Node**: `OpenAI` (or `Basic LLM Chain` depending on n8n version).
-*   **Model**: `gpt-4` or `gpt-3.5-turbo`.
+*   **Node**: `Google Gemini Chat`
+*   **Model**: `gemini-flash` or `gemini-pro`.
 *   **Prompt**:
     > You are a sales expert. Write a cold email for {{ $json.first_name }} at {{ $json.company }}.
     > Role: {{ $json.role }}.
