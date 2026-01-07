@@ -14,7 +14,11 @@ This project automates cold outreach using self-hosted n8n and Google Sheets, wi
   - Handles basic follow-ups (2 days later).
 
 ## B. Google Sheets Schema
-Create a new Google Sheet with the following headers in Row 1:
+**Create 2 Tabs (Sheets) in your Spreadsheet:**
+1.  Name one tab: **`MNC`**
+2.  Name the other tab: **`Startup`**
+
+Both tabs should have the SAME headers:
 
 | Column | Header | Description |
 | :--- | :--- | :--- |
@@ -24,13 +28,14 @@ Create a new Google Sheet with the following headers in Row 1:
 | D | `role` | Job Title |
 | E | `email` | Email Address |
 | F | `linkedin_url` | LinkedIn Profile URL |
-| G | `company_type` | `mnc` or `startup` |
-| H | `status` | `new`, `emailed`, `followed_up`, `replied`, `error` |
-| I | `last_contacted_date` | Date (YYYY-MM-DD) |
-| J | `email_subject` | Generated Subject Line |
-| K | `email_body` | Generated Email Body |
-| L | `linkedin_message` | Generated LinkedIn Note |
-| M | `error_reason` | Error logs |
+| G | `email1_status` | `pending`, `sent`, `error` |
+| H | `email1_date` | Date Sent (YYYY-MM-DD) |
+| I | `email2_status` | `pending`, `sent`, `replied` |
+| J | `email2_date` | Date Sent (YYYY-MM-DD) |
+| K | `thread_id` | **(New)** Gmail Thread ID (for accurate replies) |
+| L | `industry` | **(New)** Industry (e.g., "SaaS", "Finance") |
+| M | `linkedin_message` | Generated LinkedIn Note |
+| N | `error_reason` | Error logs |
 
 ## C. n8n Workflow Instructions
 Follow these steps to build the workflows in n8n.
@@ -51,15 +56,21 @@ Access at `http://localhost:5678`.
 ### Workflow 1: Daily Outreach (New Leads)
 **1. Trigger: Schedule Request**
 *   **Node**: `Schedule Trigger`
-*   **Settings**: Trigger Interval: `Days`, Time: `9:00 AM` (or preferred time).
+*   **Settings**:
+    *   Trigger Interval: `Weeks`
+    *   Days: Select `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`.
+    *   Time: `9:00 AM`.
 
 **2. Read New Leads (Split Strategy)**
-We will read 20 MNCs and 20 Startups in parallel.
+We will read 20 rows from the **MNC** tab and 20 from the **Startup** tab.
 *   **Node A**: `Google Sheets` (Get Many Rows)
-    *   Filters: `status`=`new` AND `company_type`=`mnc`
+    *   Sheet Name: `MNC`
+    *   Filters: `email1_status`=`pending`
     *   Limit: `20`
+    *   *(Tip: Add a manual field "company_type"="mnc" in an "Set" node after this if you want to use it in the prompt, or just assume it based on the branch).*
 *   **Node B**: `Google Sheets` (Get Many Rows)
-    *   Filters: `status`=`new` AND `company_type`=`startup`
+    *   Sheet Name: `Startup`
+    *   Filters: `email1_status`=`pending`
     *   Limit: `20`
 
 **3. Merge & Loop**
@@ -95,10 +106,9 @@ We will read 20 MNCs and 20 Startups in parallel.
 *   **Operation**: `Update Row`
 *   **Match**: Row Number (if available) or filter by Email.
 *   **Fields to Update**:
-    *   `status`: `emailed`
-    *   `last_contacted_date`: `{{ new Date().toISOString().split('T')[0] }}`
-    *   `email_subject`: `{{ $json.output.subject }}`
-    *   `email_body`: `{{ $json.output.body }}`
+    *   `email1_status`: `sent`
+    *   `email1_date`: `{{ new Date().toISOString().split('T')[0] }}`
+    *   `thread_id`: `{{ $json.threadId }}` (Map this from Gmail output)
     *   `linkedin_message`: `{{ $json.output.linkedin_message }}`
 
 **8. Error Handler (Optional)**
@@ -114,11 +124,11 @@ We will read 20 MNCs and 20 Startups in parallel.
 **2. Read Emailed Leads**
 *   **Node**: `Google Sheets`
 *   **Operation**: `Get Many Rows`
-*   **Filters**: `status` Equal to `emailed`.
+*   **Filters**: `email1_status` Equal to `sent` AND `email2_status` Equal to `pending`.
 
 **3. Filter by Date**
 *   **Node**: `If`
-*   **Condition**: `last_contacted_date` is before `{{ new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().split('T')[0] }}`.
+*   **Condition**: `email1_date` is before `{{ new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().split('T')[0] }}`.
 
 **4. Loop Over Leads**
 *   **Node**: `Loop`.
@@ -132,14 +142,14 @@ We will read 20 MNCs and 20 Startups in parallel.
 **6. Branch on Reply**
 *   **Node**: `If`.
 *   **Condition**: If message count > 0 (Reply exists).
-    *   **TRUE**: Update Sheet -> `status` = `replied`.
+    *   **TRUE**: Update Sheet -> `email2_status` = `replied` (Stop workflow).
     *   **FALSE**: Proceed to follow up.
 
 **7. Send Follow-up (If False)**
 *   **Node**: `AI` (Generate polite bump).
 *   **Node**: `Gmail` (Send).
 *   **Node**: `Wait` (30-90s).
-*   **Node**: `Google Sheets` (Update `status` = `followed_up`).
+*   **Node**: `Google Sheets` (Update `email2_status` = `sent`, `email2_date` = Today).
 
 ## D. Node.js Helper Scripts
 (Files located in this directory)
