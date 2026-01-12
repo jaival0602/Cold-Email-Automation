@@ -81,20 +81,18 @@ We will read 20 rows from the **MNC** tab and 20 from the **Startup** tab.
 
 **4. Generate Content (AI)**
 *   **Node**: `Google Gemini Chat`
-*   **Model**: `gemini-flash` or `gemini-pro`.
-*   **Prompt**:
-    > You are a sales expert. Write a cold email for {{ $json.first_name }} at {{ $json.company }}.
-    > Role: {{ $json.role }}.
-    > Output JSON with keys: "subject", "body", "linkedin_message".
-    > limit body to 100 words. linkedin_message max 300 chars.
+*   **Model**: Manually type `gemini-2.5-flash` or `gemini-3-flash` (or select from list).
+*   **Backup Model** (If using fallback): `gemini-3-flash`.
+*   **Prompt**: Use the JSON prompt structure provided.
+*   **Output format**: JSON.
 
-**5. Send Email**
+**5. Gmail (Create Draft)**
 *   **Node**: `Gmail`
-*   **Operation**: `Send`
+*   **Operation**: `Create Draft` (Allows manual review).
 *   **Account**: Select your Google OAuth Credential.
-*   **To**: `{{ $json.email }}`
-*   **Subject**: `{{ $json.output.subject }}`
-*   **Body**: `{{ $json.output.body }}`
+*   **To**: Expression -> `{{ $('Loop Over Items').item.json["Email"] }}`
+*   **Subject**: `{{ $json.subject }}`
+*   **Body**: `{{ $json.body }}`
 
 **6. Rate Limiting (Delay)**
 *   **Node**: `Wait`
