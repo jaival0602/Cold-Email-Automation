@@ -7,7 +7,7 @@ This project automates cold outreach using self-hosted n8n and Google Sheets, wi
 - **Database**: Google Sheets (Stores leads & status).
 - **Email**: Gmail (via OAuth).
 - **Triggers**: Daily Schedule (Cron) or Manual Webhook.
-- **Constraints**: 40 emails/day max, 30-90s delay between actions.
+- **Constraints**: 40 emails/day max, 60-90s delay between actions.
 - **Features**: 
   - Generates personalized emails using AI.
   - Generates LinkedIn connection messages (saved to sheet).
